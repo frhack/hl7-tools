@@ -3241,11 +3241,11 @@ function renderParsedTable() {
     const hdr = document.createElement('tr');
     hdr.className = 'seg-header';
     hdr.dataset.segKey = segKey;
-    hdr.innerHTML = '<td colspan="4"><span class="seg-toggle" onclick="toggleSegment(\'' +
-      escAttr(segKey) + '\',event)">&#9660;</span>' +
+    hdr.innerHTML = '<td colspan="4"><span class="seg-toggle">&#9660;</span>' +
       '<span class="addr">' + esc(addrPrefix) + '</span> ' + esc(segLabel) +
       (profileSeg ? '<span class="custom-badge">Profile</span>' : '') +
       (currentProfile && currentProfile.segments && !(seg.name in currentProfile.segments) ? '<span class="custom-badge" style="color:var(--yellow)">Unexpected</span>' : '') + '</td>';
+    hdr.querySelector('.seg-toggle').addEventListener('click', event => toggleSegment(segKey, event));
     tbody.appendChild(hdr);
 
     for (const field of seg.fields) {
@@ -3300,7 +3300,7 @@ function renderParsedTable() {
       row.onclick = () => selectField(row, seg.name, field.fieldNum, field, segKey, si);
 
       const expandIcon = hasComponents ?
-        '<span class="expand-icon" onclick="toggleComponents(\'' + escAttr(fieldKey) + '\',event)">&#9654;</span>' : '<span class="expand-icon"></span>';
+        '<span class="expand-icon">&#9654;</span>' : '<span class="expand-icon"></span>';
 
       row.innerHTML =
         '<td class="addr">' + expandIcon + esc(field.address) + '</td>' +
@@ -3314,6 +3314,9 @@ function renderParsedTable() {
           (displayValue ? esc(displayValue) : '(empty)') +
           (hasReps ? '<span class="rep-badge" title="' + field.repetitions.length + ' repetitions"> [' + field.repetitions.length + 'x]</span>' : '') + '</td>';
 
+      if (hasComponents) {
+        row.querySelector('.expand-icon').addEventListener('click', event => toggleComponents(fieldKey, event));
+      }
       tbody.appendChild(row);
 
       // Component sub-rows
@@ -3537,8 +3540,7 @@ function showDetail(segName, fieldNum, fieldData, segKey, segIdx) {
   if (dt) {
     const displayDt = effectiveDt || dt;
     const dtDef = DATA_TYPES[displayDt] || DATA_TYPES[dt];
-    html += '<span class="lbl">Data Type</span><span class="val"><span class="dtype-link" onclick="showDataType(\'' +
-      escAttr(displayDt) + '\')">' + esc(displayDt) + '</span>' +
+    html += '<span class="lbl">Data Type</span><span class="val"><span class="dtype-link" data-dtype="' + escAttr(displayDt) + '">' + esc(displayDt) + '</span>' +
       (dt === '*' && effectiveDt ? ' <em style="color:var(--subtext)">(from OBX-2)</em>' : '') +
       (dtDef ? ' - ' + esc(dtDef.name) : '') + '</span>';
   }
@@ -3733,6 +3735,7 @@ function showDetail(segName, fieldNum, fieldData, segKey, segIdx) {
   }
 
   panel.innerHTML = html;
+  bindDataTypeLinks(panel);
 }
 
 function showDataType(dt) {
@@ -3756,13 +3759,20 @@ function showDataType(dt) {
       const c = dtDef.components[i];
       html += '<tr><td class="ct-idx">' + (i + 1) + '</td>';
       html += '<td class="ct-name">' + esc(c.name) + '</td>';
-      html += '<td class="ct-dt"><span class="dtype-link" onclick="showDataType(\'' +
-        escAttr(c.dt) + '\')">' + esc(c.dt) + '</span></td></tr>';
+      html += '<td class="ct-dt"><span class="dtype-link" data-dtype="' + escAttr(c.dt) + '">' + esc(c.dt) + '</span></td></tr>';
     }
     html += '</tbody></table></div>';
   }
 
   panel.innerHTML = html;
+  bindDataTypeLinks(panel);
+}
+
+// Values from messages/profiles must remain data, never inline JavaScript.
+function bindDataTypeLinks(panel) {
+  panel.querySelectorAll('.dtype-link[data-dtype]').forEach(link => {
+    link.addEventListener('click', () => showDataType(link.dataset.dtype));
+  });
 }
 
 function clearDetail() {

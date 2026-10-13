@@ -18,6 +18,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
+browser = ["playwright>=1.40"]
 
 [project.scripts]
 hl7view = "hl7view.cli:main"

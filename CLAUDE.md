@@ -107,7 +107,15 @@ venv/bin/python tools/gen_js_defs.py
 venv/bin/pytest tests/ -v
 ```
 
-100 tests covering core modules (parser, encoding, profile, anonymize, definitions, diff) plus performance benchmarks (500-OBX parse/serialize/validate) and a JS codegen sync check. Uses all 4 sample messages as fixtures. No browser/UI tests — the Python core logic mirrors the web viewer's JS implementation, so these tests serve as a shared specification.
+100 tests covering core modules (parser, encoding, profile, anonymize, definitions, diff) plus performance benchmarks (500-OBX parse/serialize/validate) and a JS codegen sync check. Uses all 4 sample messages as fixtures. Browser security regression tests in `tests/test_web_viewer_security.py` run separately in CI using Chromium and also exercise the standalone `file://` viewer. To run locally:
+
+```bash
+venv/bin/pip install -e ".[dev,browser]"
+venv/bin/python -m playwright install chromium
+venv/bin/pytest tests/test_web_viewer_security.py -v
+```
+
+The browser tests are skipped when Playwright is not installed.
 
 - `pytest.ini` sets `pythonpath = .` so no install step needed
 - `tests/conftest.py` — shared fixtures (parsed messages, sample profile)
